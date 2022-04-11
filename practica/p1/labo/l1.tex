@@ -1,0 +1,105 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1.0in]{geometry}
+
+\usepackage{g-util}
+\usepackage{amsfonts, amsmath, amssymb}
+
+\title{Organizaciòn del Computador II
+\large Labo 1}
+\author{F. Galileo Cappella Lewi}
+\date{1c2022}
+
+\begin{document}
+
+\begin{enumerate}
+\item \begin{enumerate} %EJ: 1
+
+\item 32-bits
+\item \(2^32\) bytes = 4GB
+\item 8, 32-bits
+\item 32-bits, marca la posición de la siguiente instrucción
+\item Porqe tiene qe poder "llevarte" a cualquier lugar en la memoria
+
+\end{enumerate}
+
+\item \begin{enumerate} %EJ: 2
+
+\item 32-bits, y guarda los status flags (resultado de operaciones aritméticas), un flag de control ("endianess" de los strings), y flags de sistema (activan y desactivan cosas del OS)
+\item \begin{itemize} \
+	\item[Overflow:] 11, Prendido si el número es de un valor muy grande para el destino 
+	\item[Sign:] 7, Vale lo mismo qe el bit más significativo del resultado
+	\item[Interrupt:] 9, Marca si el procesador va a responder a interrupciones
+\end{itemize}
+\item No es lo mismo, los primeros 32bits están reservados. Y cambia de nombre
+
+\end{enumerate}
+
+\item \begin{enumerate} %EJ: 3
+
+\item Se usa para pasar parámetros entre subrutinas, y para guardar valores dentro de mi subrutina
+\item El procesador lo ubica en la memoria (en base al necesitado). Y dentro de mi memoria asignada, arriba de todo
+\item Apunta al último elemento +1 de mi stack frame 
+\item Apunta a una posición dentro del stack, se suele usar para marcar la base del stack frame
+
+ebp: 6 \\
+esp: 4 \\
+
+13: \\
+12: \\
+11: \\
+10:+EIP \\
+9:+EBP <- MI EBP \\
+8:+ <- nEBP, nESP \\
+7: blabla \\
+6:-EIP <- CALL \\
+5:-EBP <- yo, de buena onda \\
+4:-llamada <- EBP, ESP \\
+3:- \\
+2:- \\
+1: blabla \\
+0: blabla \\
+
+\item Se guarda el valor del EIP para poder continuar una vez terminada la subrutina. Y también se suele guardar el EBP
+\item Pop-ea el ultimo valor del stack (asumiendo qe es el EIP guardado) y lo guarda en el registro del EIP
+\item Hay qe asegurarse qe sea el EIP guarado, se suele guardar en la posición del EBP (qe a su vez suele ser la base del stack)
+\item Puede tener un ancho de 16-bits o de 32-bits. En 64-bits tiene de 16-bits o 64-bits 
+\item \begin{itemize} \ \\
+
+\item[Galileo] Sí, pero habría qe asegurarse otra forma de ubicar el EIP y una forma de saber cuánto del stack usé. CONVENCIDO: Si está resuelto por afuera mio que no se me llene el stack, no hace falta saber cuánto stack usé
+\item[Luciana] Acuerda con Galileo
+\item[Juan] Sí, pero depende del uso qe necesitás. (eg. no necesitas voler al EIP)
+
+\end{itemize}
+
+\end{enumerate}
+
+\item \begin{enumerate} %EJ4
+
+\item 
+
+\begin{table}[]
+\begin{tabular}{l|lll}
+  & a & b & c \\
+ DEC & 1 operando, r/m & decrementa en 1 su valor &  \\
+ ADD & 2 operandos, r/m e imm/r & le suma el segundo operando al valor en la posición del primero & 		 \\
+ MOV & 2 operandos, r/m y r/m & copia el valor del segundo operando al primer operando &  \\
+ JZ & 1 operando & Si el flag 0 está marcado (aka. el resultado de la ultima operación aritmética fue 0) salta a la posición & %TODO: Tipo del operando, y a donde salta
+\end{tabular}
+\end{table}
+
+; Calcula 9 * 3 \\
+MOV EBX, 9 ; Valor \\
+MOV ECX, 3 ; *3, lo uso de contador para las sumas \\
+MOV EAX, 0 ; Empiezo en cero \\
+loop: \\
+	ADD EAX, EBX \\
+	DEC ECX \\
+	JZ end \\
+	JMP loop \\
+end: \\
+	MOV 0x0000000000000022, EAX ; Resultado en la posicion 42 de la memoria \\
+
+\end{enumerate}
+
+\end{enumerate}
+\end{document}
