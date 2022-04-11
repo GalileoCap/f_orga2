@@ -93,6 +93,17 @@ int main (void){
   printf(" %f\n", resd);
   /*assert*/
 
+    /* strCmp */
+  char a[] = "abcde";
+  char b[] = "abcdf";
+  char c[] = "abcdef";
+  char d[] = "";
+  assert(strCmp(a, b) == -1);
+  assert(strCmp(b, a) == 1);
+  assert(strCmp(a, a) == 0);
+  assert(strCmp(a, c) == -1);
+  assert(strCmp(c, a) == 1);
+
 	return 0;    
 }
 
