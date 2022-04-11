@@ -1,0 +1,4 @@
+== Checkpoint 2 ==
+
+alternate_sum_4
+

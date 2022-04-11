@@ -1,0 +1,33 @@
+\begin{document}
+
+\begin{enumerate}
+\item La convención de llamada de C estipula cómo se hacen los llamados a funciones, para solucionar problemas como mantener los datos del contexto anterior a la llamada, pasar parámetros, y devolver resultados.
+  \paragraph{64-bits} \begin{itemize}
+    \item Hay 5 registros no volátiles (tengo qe asegurarme qe sigan valiendo lo mismo al final de mi llamada).
+    \item Si tengo como retorno a un entero o a un puntero lo guardo en RAX, si es un flotante en XMMO.
+    \item Al final de mi llamada tengo qe asegurarme qe el stack esté como cuando me llamaron.
+    \item Antes de llamarme el stack tiene qe estar alineado a 8-Bytes (16-Bytes si uso libc).
+    \item Los parámetros se pasan en 6 registros para enteros, y 8 registros para floats, y si hay más se pasan de derecha a izquierda a través del stack.
+  \end{itemize}
+  \paragraph{32-bits} \begin{itemize}
+    \item Hay 4 registros no volátiles.
+    \item El valor de retorno se guarda en EAX.
+    \item Al final de mi llamada tengo qe asegurarme qe el stack esté como cuando me llamaron.
+    \item Antes de llamarme el stack tiene qe estar alineado a 4-Bytes.
+    \item Los parámetros se pasan de derecha a izquierda a través del stack.
+  \end{itemize}
+
+\item En C se encarga el compilador, y en ASM le programadore.
+
+\item \paragraph{Stack Frame} Todo lo pertinente a la función llamada (parámetros, rip, rbp, etc.)
+  \paragraph{Prólogo} Se prepara todo para la llamada (guardar espacio en el stack, alinear a 8/16-Bytes, guardar registros no-volátiles)
+  \paragraph{Epílogo} (restaurás registros no-volátiles, reseteamos la pila a como estaba antes de llamarnos, guardamos el resultado en el registro correcto, etc.)
+
+\item En el prólogo me guardo un pedazo de memoria, y guardo mis variables temporales ahí
+
+\item 16-bytes, 8-bytes (16-bytes + el tamaño del RIP)
+
+\item Se puede romper :c la interacción, porqe puede qe guarde el resultado en registros diferentes a los esperados, o qe espere qe guarde más parámetros en el stack...
+\end{enumerate}
+
+\end{document}
