@@ -41,13 +41,57 @@ int main (void){
   printf(" %i\n", res);
   assert(res == 18);	
 
-  /*printf("alternate_sum_8\n");*/
-  /*product_2_f(&res, 3, 1.5f);*/
-  /*printf("%i", res);*/
-  /*assert(res == 4); //4.5f truncado*/
-  /*product_2_f(&res, 5, 0.2);*/
-  /*printf(" %i\n", res);*/
-  /*assert(res == 1); //1.f truncado*/
+  printf("product_2_f\n");
+  product_2_f(&res, 3, 1.5f);
+  printf("%i", res);
+  assert(res == 4); //4.5f truncado
+  product_2_f(&res, 5, 0.2);
+  printf(" %i\n", res);
+  assert(res == 1); //1.f truncado
+
+  printf("complex_sum_z: ");
+  complex_item item1 = {
+    .w = 1,
+    .x = 2,
+    .y = 3,
+    .z = 4
+  };
+  complex_item item2 = {
+    .w = 5,
+    .x = 6,
+    .y = 7,
+    .z = 8
+  };
+
+  complex_item arr[4] = {item1, item1, item2, item2};
+  res = complex_sum_z(arr, 4);
+  printf(" %i\n", res);
+  assert(res == 24);
+
+  printf("packed_complex_sum_z: ");
+  packed_complex_item item1p = {
+    .w = 1,
+    .x = 2,
+    .y = 3,
+    .z = 4
+  };
+  packed_complex_item item2p = {
+    .w = 5,
+    .x = 6,
+    .y = 7,
+    .z = 8
+  };
+
+  packed_complex_item arrp[4] = {item1p, item1p, item2p, item2p};
+  res = packed_complex_sum_z(arrp, 4);
+  printf(" %i\n", res);
+  assert(res == 24);
+
+  printf("product_9_f:");
+  double resd = 0;
+  product_9_f(&resd, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9);
+  printf(" %f\n", resd);
+  /*assert*/
 
 	return 0;    
 }

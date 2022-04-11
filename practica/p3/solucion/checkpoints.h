@@ -30,17 +30,19 @@ utilizar en nuestro programa
 //*************************************
 
 typedef struct complex_item_str{
-    uint64_t w;    
-    uint32_t x;
-    uint64_t y;
-    uint32_t z;
+    uint64_t w; // 8 bytes
+    uint32_t x; // 4 bytes
+    // 4 bytes de padding
+    uint64_t y; // 8 bytes
+    uint32_t z; // 4 bytes
+    // 28 bytes alineado a 16 => 32 bytes
 } complex_item;
 
 typedef struct  __attribute__((__packed__)) packed_complex_item_str{
-    uint64_t w;    
-    uint32_t x;
-    uint64_t y;
-    uint32_t z;
+    uint64_t w; // 8 bytes 
+    uint32_t x; // 4 bytes
+    uint64_t y; // 8 bytes
+    uint32_t z; // 4 bytes
 } packed_complex_item;
 
 //****************************************
