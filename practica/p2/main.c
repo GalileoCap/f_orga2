@@ -24,7 +24,7 @@ int main()
         .concept = 1,
     };
 
-    printf("%lu, %lu", sizeof(stud1), sizeof(stud2));
+    //printf("%lu, %lu", sizeof(stud1), sizeof(stud2));
 
     // Hint: ver 'createFrame'
     stack->createFrame(stack);

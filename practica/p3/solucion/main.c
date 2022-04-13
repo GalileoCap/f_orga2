@@ -91,18 +91,76 @@ int main (void){
   double resd = 0;
   product_9_f(&resd, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9);
   printf(" %f\n", resd);
-  /*assert*/
+  assert(resd == 131681894400.0);
 
-    /* strCmp */
-  char a[] = "abcde";
-  char b[] = "abcdf";
-  char c[] = "abcdef";
-  char d[] = "";
-  assert(strCmp(a, b) == -1);
-  assert(strCmp(b, a) == 1);
-  assert(strCmp(a, a) == 0);
-  assert(strCmp(a, c) == -1);
-  assert(strCmp(c, a) == 1);
+	printf("strCmp: ");
+  char a[] = "abcde",
+			 b[] = "abcdf",
+			 c[] = "abcdef",
+			 d[] = "";
+	int32_t resi;
+	/*
+  resi = strCmp(a, a);
+	printf("%i ", resi);
+ 	assert(resi == 0);
+  resi = strCmp(a, b);
+	printf("%i ", resi);
+ 	assert(resi == -1); 
+  resi = strCmp(a, c);
+	printf("%i ", resi);
+ 	assert(resi == -1);
+  resi = strCmp(a, d);
+	printf("%i ", resi);
+ 	assert(resi == 1);
+  resi = strCmp(b, a);
+	printf("%i ", resi);
+ 	assert(resi == 1);
+  resi = strCmp(b, b);
+	printf("%i ", resi);
+ 	assert(resi == 0); 
+  resi = strCmp(b, c);
+	printf("%i ", resi);
+ 	assert(resi == 1);
+  resi = strCmp(b, d);
+	printf("%i ", resi);
+ 	assert(resi == 1);
+  resi = strCmp(c, a);
+	printf("%i ", resi);
+ 	assert(resi == 1);
+  resi = strCmp(c, b);
+	printf("%i ", resi);
+ 	assert(resi == -1); 
+  resi = strCmp(c, c);
+	printf("%i ", resi);
+ 	assert(resi == 0);
+  resi = strCmp(c, d);
+	printf("%i ", resi);
+ 	assert(resi == 1);
+  resi = strCmp(d, a);
+	printf("%i ", resi);
+ 	assert(resi == -1);
+  resi = strCmp(d, b);
+	printf("%i ", resi);
+ 	assert(resi == -1); 
+  resi = strCmp(d, c);
+	printf("%i ", resi);
+ 	assert(resi == -1);
+  resi = strCmp(d, d);
+	printf("%i\n", resi);
+ 	assert(resi == 0);
+	*/
+
+	printf("strClone: ");
+	char *foo = "Testing",
+			 *bar = strClone(foo);
+	printf("%s\n", bar);
+	assert(*foo == *bar);
+	strDelete(bar);
+
+	foo = ""; bar = strClone(foo);
+	printf("%s\n", bar);
+	assert(*foo == *bar);
+	strDelete(bar);
 
 	return 0;    
 }

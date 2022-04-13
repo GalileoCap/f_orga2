@@ -20,53 +20,47 @@ strCmp:
   push rbp
   mov rbp, rsp
 
-  mov rcx, 0x0    ; posición en la string
 .compareNextChar:
-  ; Me fijo si estoy en el final de a ó b
-  cmp byte [rdi+rcx], 0x0
+  ; Comparo el caracter actual
+  mov r8b, [rdi]
+  cmp r8b, [rsi]
+  jl .isGreater ; TODO: Porque al reves anda
+  jg .isLess
+
+  ; Si son iguales me fijo si estoy en el final de alguno
+  cmp byte [rdi], 0x0
   je .aEnd
-  cmp byte [rsi,+rcx], 0x0
+  cmp byte [rsi], 0x0
   je .bEnd
 
-  ; Comparo el caracter actual
-  mov r8b, [rsi+rcx]
-  cmp byte [rdi+rcx], r8b
-  jl .isLess
-  jg .isGreater
-
-  ; Si son iguales, comparo el siguiente
-  inc rcx
+  ; Si no termine, continuo
+  inc rdi
+	inc rsi
   jmp .compareNextChar
 
-.aEnd:
-  ; Me fijo si estoy al final de b
-  cmp byte [rsi+rcx], 0x0
-  ; Si estoy, son iguales
-  je .isEqual
-  ; Sino, a es menor
-  jmp .isLess
+.aEnd
+	cmp byte [rsi], 0x0
+	je .isEqual
+	jmp .isLess
 
-.bEnd:
-  ; Me fijo si estoy al final de a
-  cmp byte [rdi+rcx], 0x0
-  ; Si estoy, son iguales
-  je .isEqual
-  ; Sino, a es mayor
-  jmp .isGreater
+.bEnd
+	cmp byte [rdi], 0x0
+	je .isEqual
+	jmp .isGreater
 
 .isEqual:
   mov rax, 0x0
-  jmp .epilogue
+  jmp .end
 
 .isLess:
-  mov rax, -1
-  jmp .epilogue
+  mov rax, 0xffffffffffffffff
+  jmp .end
 
 .isGreater:
   mov rax, 0x1
-  ;jmp .epilogue
+  ;jmp .end
 
-.epilogue:
+.end:
   pop rbp
   ret
 
@@ -75,26 +69,26 @@ strClone:
   push rbp
   mov rbp, rsp
 
-  call strLen ; A: rdi ya tiene el valor correcto
-  sub rsp, 0x8 ; A: Padding
-  push rdi ; A: Me guardo a
+	sub rsp, 0x8 ; A: Me guardo a
+	push rdi
 
-  mov rdi, rax
-  ;call malloc ; A: Me reservo el espacio necesario TODO: No anda
+  call strLen ; A: rax = malloc(strLen(a) * 1)
+  mov rdi, rax 
+	inc rdi ; A: Agrego espacio para el nulo
+	push rdi
+	mov rax, malloc
+  call rax 
 
+	pop rcx ; A: Contador
   pop rdi ; A: Recupero al strng original
-  ;mov rsi, rax ; U: La posición dentro del string copia
-  mov rsi, rdi ; TODO: Lo voy a tapar consigomismo, es solo por el malloc
+  mov rsi, rax ; U: La posición dentro del string copia
 .loop:
-  mov byte rdx, [rsi] ; A: Copio este char
-  mov [rsi], rdx
+  mov r8b, byte [rdi] ; A: Copio este char
+  mov byte [rsi], r8b
   inc rsi ; A: Voy al siguiente char en ambos strings
   inc rdi 
-  cmp byte [rdi], 0x0 ; A: Si llegué al final del string, termino
-  je .end
-  jmp .loop
+	loop .loop
 
-.end:
   ;NOTE: rax ya vale el puntero de la copia
   add rsp, 0x8 
   pop rbp
@@ -102,11 +96,28 @@ strClone:
 
 ; void strDelete(char* a)
 strDelete:
-ret
+	push rbp
+	mov rbp, rsp
+
+	mov rax, free
+	call rax
+
+	pop rbp
+	ret
 
 ; void strPrint(char* a, FILE* pFile)
 strPrint:
-ret
+	push rbp
+	mov rbp, rsp
+
+	mov rdx, rdi
+	mov rdi, rsi
+	mov rsi, rdx
+	mov rdx, fprintf
+	call rdx
+
+	pop rbp
+	ret
 
 ; uint32_t strLen(char* a)
 strLen:
@@ -123,8 +134,4 @@ strLen:
   mov rax, rcx
   pop rbp
   ret
-
-  ret
-
-
 

@@ -156,6 +156,7 @@ void test_checkpoint4(char* filename) {
     RUN(filename, fprintf(pfile, "%i - ", strLen(ac));) RUN(filename, strPrint(ac,pfile);) NL(filename)
     char* nc = strClone(n);
     assert(n != nc); assert(strCmp(n,nc) == 0);
+    //printf("XXXGALI: %s %s %i %i\n", n, nc, strCmp(n, nc), strLen(nc));
     RUN(filename, fprintf(pfile, "%i - ", strLen(nc));) RUN(filename, strPrint(nc,pfile);) NL(filename)
     NL(filename)
 
