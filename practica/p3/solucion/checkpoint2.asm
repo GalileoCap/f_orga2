@@ -38,151 +38,102 @@ global alternate_sum_4_using_c
   ;ret
 
 ; uint32_t alternate_sum_4(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4);
-; registros: x1[RDI], x2[RSI], x3[RDX], x4[RCX]
+; registros: x1[edi], x2[esi], x3[edx], x4[ecx]
 alternate_sum_4:
-  mov rax, rdi ; res = x1
-  sub rax, rsi ; res -= x2
-  add rax, rdx ; res += x3
-  sub rax, rcx ; res -= x4
+  ; A: Prólogo
+  push rbp
+  mov rbp, rsp
 
+  mov eax, edi ; res = x1
+  sub eax, esi ; res -= x2
+  add eax, edx ; res += x3
+  sub eax, ecx ; res -= x4
+
+  pop rbp
   ret
 
 ; uint32_t alternate_sum_4_using_c(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4);
-; registros: x1[rdi], x2[rsi], x3[rdx], x4[rcx]
-;alternate_sum_4_using_c: 
-  ;;prologo
-  ;push rbp ; alineado a 16
-  ;mov rbp, rsp
-  ;sub rsp, 0x10 ; A: Me reservo 8-bytes en la memoria para x3 y x4, y 8-bytes de padding
-  ;mov [rbp], rdx ; A: Guardo x3
-  ;mov [rbp - 0x4], rcx ; A: Guardo x4
-  
-  ;;A: Llamo a restar_c(x1, x2)
-  ;;NOTA: x1 y x2 ya estan en rdi y rsi
-  ;call restar_c
-
-  ;;A: Llamo a sumar_c(restar_c(x1, x2), x3)
-  ;mov rdi, rax ; A: Guardo el resultado del call anterior en el primer parámetro
-  ;mov rsi, [rbp]
-  ;call sumar_c
-
-  ;;A: Llamo a restar_c(sumar_c(restar_c(x1, x2), x3), x4)
-  ;mov rdi, rax
-  ;mov rsi, [rbp - 0x4]
-  ;call restar_c
-
-  ;;epilogo
-  ;;NOTA: Ya está en rax el resultado
-  ;add rsp, 0x10
-  ;pop rbp
-  ;ret 
-
-; uint32_t alternate_sum_4_using_c(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4);
-; registros: x1[rdi], x2[rsi], x3[rdx], x4[rcx]
+; registros: x1[edi], x2[esi], x3[edx], x4[ecx]
 alternate_sum_4_using_c: 
-  ;prologo
-  push rbp ;A:  alineado a 16
-  mov rbp, rsp ; A: Muevo la base
-  push rcx ; A: Me guardo x4 y x3, sigue alineado a 16
-  push rdx
+  ; A: Prologo
+  push rbp
+  mov rbp, rsp 
+
+  sub rsp, 0x10 ; A: Me reservo 16-Bytes en la memoria
+  mov [rbp - 0x8], edx ; A: Me guardo x4 y x3
+  mov [rbp - 0x10], ecx
   
-  ;A: Llamo a restar_c(x1, x2)
-  ;NOTA: x1 y x2 ya estan en rdi y rsi
+  ;A: eax = restar_c(x1, x2)
+  ;NOTA: x1 y x2 ya estan en edi y esi
   call restar_c
 
-  ;A: Llamo a sumar_c(restar_c(x1, x2), x3)
-  mov rdi, rax ; A: Guardo el resultado del call anterior en el primer parámetro
-  pop rsi ; A: Traigo x3, queda alineado a 8
-  sub rsp, 0x8 ; A: Alineo a 16 de nuevo con padding
+  ;A: eax = sumar_c(eax, x3) = sumar_c(restar_c(x1, x2), x3)
+  mov edi, eax ; A: Guardo el resultado del call anterior en el primer parámetro
+  mov esi, [rbp - 0x8] ; A: Traigo x3
   call sumar_c
 
-  ;A: Llamo a restar_c(sumar_c(restar_c(x1, x2), x3), x4)
-  mov rdi, rax
-  add rsp, 0x8 ; A: Saco el padding
-  pop rsi ; A: Traigo x4, queda alineado a 16
+  ;A: eax = sumar_c(eax, x4) = restar_c(sumar_c(restar_c(x1, x2), x3), x4)
+  mov edi, eax
+  mov esi, [rbp - 0x10]
   call restar_c
 
-  ;epilogo
-  ;NOTA: Ya está en rax el resultado
-  pop rbp ; A: Recupero el rbp original
+  ; A: Epilogo
+  ; NOTE: Ya está en rax el resultado
+  add rsp, 0x10 ; A: Libero el espacio en el stack
+  pop rbp 
   ret 
 
 ; uint32_t alternate_sum_4_simplified(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4);
-; registros: x1[rdi], x2[rsi], x3[rdx], x4[rcx]
-
+; registros: x1[edi], x2[esi], x3[edx], x4[ecx]
 alternate_sum_4_simplified:
-  mov rax, rdi
-  sub rax, rsi
-  add rax, rdx
-  sub rax, rcx
+  mov eax, edi
+  sub eax, esi
+  add eax, edx
+  sub eax, ecx
 
 	ret
 
 ; uint32_t alternate_sum_8(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7, uint32_t x8);	
-; registros y pila: x1[rdi], x2[rsi], x3[rdx], x4[rcx], x5[r8], x6[r9], x7[rbp + 0x10], x8[rbp + 0x18]
-;alternate_sum_8:
-	;;prologo
-
-  ;push rbp
-  ;mov rbp, rsp
-  ;sub rsp, 0x4
-
-  ;call alternate_sum_4
-
-  ;mov [rbp], rax
-
-  ;mov rdi, r8 ; r8es += x5
-  ;mov rsi, r9 ; res -= x6
-  ;mov rdx, [rbp + 0x10] ; res += x7
-  ;mov rcx, [rbp + 0x18] ; res -= x8
-
-  ;call alternate_sum_4
-
-	;;epilogo
-  ;add rax, [rbp]
-  ;add rsp, 0x4
-  ;pop rbp
-	;ret
-
-; uint32_t alternate_sum_8(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7, uint32_t x8);	
-; registros y pila: x1[rdi], x2[rsi], x3[rdx], x4[rcx], x5[r8], x6[r9], x7[rbp + 0x10], x8[rbp + 0x18]
+; registros y pila: x1[edi], x2[esi], x3[edx], x4[ecx], x5[r8d], x6[r9d], x7[rbp + 0x10], x8[rbp + 0x18]
 alternate_sum_8:
-  push rbp ; A: Alineado a 16
+  ; A: Prólogo
+  push rbp
   mov rbp, rsp
 
-  push r8 ; A: Me guardo los parametros en orden, manteniendo alineamiento
-  push r9
-  mov r8, [rbp + 0x10]
-  push r8
-  mov r8, [rbp + 0x18]
-  push r8
+  sub rsp, 0x20 ; A: Me reservo 32-Bytes en el stack
+  mov [rbp - 0x8], r8d ; A: Guardo los parámetros ; NOTE: Hago esto porque no tengo certeza de que el call no me los cambie
+  mov [rbp - 0x10], r9d
+  mov r8d, [rbp + 0x10] ; NOTE: No existe mov de memoria a memoria
+  mov [rbp - 0x18], r8d
+  mov r8d, [rbp + 0x18]
+  mov [rbp - 0x20], r8d
 
-  call alternate_sum_4 ; A: Los registros ya estan en su lugar correcto
+  ; NOTE: Los registros ya estan en su lugar correcto
+  call alternate_sum_4 ; A: eax = alternate_sum(x1, x2, x3, x4)
 
-  pop rcx ; A: Recupero los parametros que guarde, en orden
-  pop rdx
-  pop rsi
-  pop rdi
-  push rax ; A: Me guardo el resultado
-  sub rsp, 0x8 ; A: Alineo con padding
-  call alternate_sum_4
+  mov edi, [rbp - 0x8] ; A: Recupero los parametros que guarde
+  mov esi, [rbp - 0x10]
+  mov edx, [rbp - 0x18]
+  mov ecx, [rbp - 0x20]
+  mov [rbp - 0x8], eax ; A: Me guardo el resultado anterior
+  call alternate_sum_4 ; A: eax = alternate_sum(x5, x6, x7, x8)
 
-  add rsp, 0x8 ; A: Saco el padding
-  pop r8 ; A: Recupero el resultado anterior
-  add rax, r8 ; A: Sumo ambos resultados
-
+  add eax, [rbp - 0x8] ; A: Sumo ambos resultados
+  add rsp, 0x20 ; A: Libero el espacio en el stack
   pop rbp
 	ret
-	
 
 ; SUGERENCIA: investigar uso de instrucciones para convertir enteros a floats y viceversa
 ;void product_2_f(uint32_t * destination, uint32_t x1, float f1);
-;registros: destination[rdi], x1[rsi], f1[xmm0] ;TODO: xmm0 se repite para return y param?
+;registros: destination[rdi], x1[esi], f1[xmm0] 
 product_2_f:
-  cvtsi2ss xmm1, rsi ; A: Convierte x1 en float y lo guarda en xmm1
+  push rbp
+  mov rbp, rsp
+
+  cvtsi2ss xmm1, esi ; A: Convierte x1 en float y lo guarda en xmm1
   mulss xmm0, xmm1 ; A: Los multiplico, y guarda en xmm0
+  cvttss2si esi, xmm0 ; A: Convierto al valor a int truncando
+  mov [rdi], esi ; A: Lo guardo en el destino
 
-  cvttss2si rsi, xmm0 ; A: Convierto al valor a int truncando
-  mov [rdi], rsi ; A: Lo guardo en el destino
-
+  pop rbp
   ret

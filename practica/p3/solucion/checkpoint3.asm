@@ -1,6 +1,10 @@
 
 ;########### SECCION DE DATOS
 section .data
+complex_item_size: equ 0x20 ; NOTE: Uso equ en lugar de dd por problemas de compilación ; NOTE: Ver checkpoints.h para ver cómo lo calculé
+complex_item_z_pos: equ 0x18
+packed_complex_item_size: equ 0x18 
+packed_complex_item_z_pos: equ 0x14
 
 ;########### SECCION DE TEXTO (PROGRAMA)
 section .text
@@ -11,68 +15,49 @@ global packed_complex_sum_z
 global product_9_f
 
 ;########### DEFINICION DE FUNCIONES
-;extern uint32_t complex_sum_z_h(*arr, uint32_t arr_length, uint element_size, uint z_pos)
-complex_sum_z_h:
-  push rbp
-  mov rbp, rsp
-
-  add rdi, rcx ; A: Arranco con el offset z 
-  mov rcx, rsi ; A: Empiezo el contador en el tamaño
-  mov r8, 0x0 ; A: res = 0 
-
-  cmp rcx, 0x0 ; A: Si la lista esta vacia, ya termine
-  jz .end
-.cycle:
-  add r8, [rdi] ; A: res += arr[i].z
-  add rdi, rdx ; A: Avanzo un elemento
-	loop .cycle		; decrementa ecx y si es distinto de 0 salta a .cycle
-
-.end:
-  mov rax, r8
-  pop rbp
-  ret
-
 ;extern uint32_t complex_sum_z(complex_item *arr, uint32_t arr_length);
-;registros: arr[rdi], arr_length[rsi]
+;registros: arr[rdi], arr_length[esi]
 complex_sum_z:
-  push rbp ; A: Alineamiento
+  ; A: Prólogo
+  push rbp 
   mov rbp, rsp
 
-  mov rdx, 0x20 ; A: Tamaño de cada elemento
-  add rdi, 0x18 ; A: Arranco con el offset z 
-  mov rcx, rsi ; A: Empiezo el contador en el tamaño
-  mov rax, 0x0 ; A: res = 0 
-
-  cmp rcx, 0x0 ; A: Si la lista esta vacia, ya termine
+  mov eax, 0x0 ; A: res = 0 
+  cmp esi, 0x0 ; A: Si la lista esta vacia, ya terminé
   jz .end
+
+  add rdi, complex_item_z_pos ; A: Arranco con el offset para z
+  mov ecx, esi ; A: Empiezo el contador en el tamaño
 .cycle:
-  add rax, [rdi] ; A: res += arr[i].z
-  add rdi, 0x20 ; A: Avanzo un elemento
-	loop .cycle		; decrementa ecx y si es distinto de 0 salta a .cycle
+  add eax, [rdi] ; A: res += arr[i].z
+  add rdi, complex_item_size ; A: Avanzo un elemento
+	loop .cycle	; A: decrementa ecx y si es distinto de 0 salta a .cycle
 
 .end:
+  ; NOTE: El resultado ya está en rax porque fui operando sobre eax que son los bits menos significativos de rax
   pop rbp
 	ret
 	
 ;extern uint32_t packed_complex_sum_z(packed_complex_item *arr, uint32_t arr_length);
-;registros: arr[?], arr_length[?]
+;registros: arr[rdi], arr_length[esi]
 packed_complex_sum_z:
-  push rbp ; A: Alineamiento
+  ; A: Prólogo
+  push rbp 
   mov rbp, rsp
 
-  mov rcx, 0x14
- 	add rdi, 0x14 ; A: Arranco con el offset z 
-  mov rcx, rsi ; A: Empiezo el contador en el tamaño
-  mov rax, 0x0 ; A: res = 0 
-
-  cmp rcx, 0x0 ; A: Si la lista esta vacia, ya termine
+  mov eax, 0x0 ; A: res = 0 
+  cmp esi, 0x0 ; A: Si la lista esta vacia, ya termine
   jz .end
+
+ 	add rdi, packed_complex_item_z_pos ; A: Arranco con el offset z 
+  mov ecx, esi ; A: Empiezo el contador en el tamaño
 .cycle:
-  add rax, [rdi] ; A: res += arr[i].z
-  add rdi, 0x18 ; A: Avanzo un elemento
-	loop .cycle		; decrementa ecx y si es distinto de 0 salta a .cycle
+  add eax, [rdi] ; A: res += arr[i].z
+  add rdi, packed_complex_item_size ; A: Avanzo un elemento
+	loop .cycle	; A: decrementa ecx y si es distinto de 0 salta a .cycle
 
 .end:
+  ; NOTE: El resultado ya está en rax porque fui operando sobre eax que son los bits menos significativos de rax
   pop rbp
 	ret
 
@@ -80,13 +65,15 @@ packed_complex_sum_z:
 ;, uint32_t x1, float f1, uint32_t x2, float f2, uint32_t x3, float f3, uint32_t x4, float f4
 ;, uint32_t x5, float f5, uint32_t x6, float f6, uint32_t x7, float f7, uint32_t x8, float f8
 ;, uint32_t x9, float f9);
-;registros y pila: destination[rdi], x1[rsi], f1[xmm0], x2[rdx], f2[xmm1], x3[rcx], f3[xmm2], x4[r8], f4[xmm3]
-;	, x5[r9], f5[xmm4], x6[rbp + 0x10], f6[xmm5], x7[rbp + 0x18], f7[xmm6], x8[rbp + 0x20], f8[xmm9],
+;registros y pila: destination[rdi], x1[esi], f1[xmm0], x2[edx], f2[xmm1], x3[ecx], f3[xmm2], x4[r8d], f4[xmm3]
+;	, x5[r9d], f5[xmm4], x6[rbp + 0x10], f6[xmm5], x7[rbp + 0x18], f7[xmm6], x8[rbp + 0x20], f8[xmm9],
 ;	, x9[rbp + 0x28], f9[rbp + 0x30]
 product_9_f:
+  ; A: Prólogo
   push rbp
   mov rbp, rsp
-  sub rsp, 0x10
+
+  sub rsp, 0x10 ; A: Me reservo 16-Bytes en el stack
 	
   cvtss2sd xmm0, xmm0 ; A: Convierto a xmm0 a double
   movq rax, xmm0 ; A: Lo guardo, porqe voy a necesitar el registro para convertir a f9
@@ -101,7 +88,7 @@ product_9_f:
   cvtss2sd xmm7, xmm7 
   movq xmm0, rax ; A: Recupero a xmm0
 
-  mulsd xmm0, xmm1
+  mulsd xmm0, xmm1 ; A: Los multiplico guardando el resultado en xmm0
   mulsd xmm0, xmm2
   mulsd xmm0, xmm3
   mulsd xmm0, xmm4
@@ -110,15 +97,15 @@ product_9_f:
   mulsd xmm0, xmm7
   mulsd xmm0, [rbp + 0x30]
 
-  cvtsi2sd xmm1, rsi 
+  cvtsi2sd xmm1, esi ; A: Convierto los enteros a double guardándolos en xmm1, y los multiplico por xmm0, guardándo el resultado en xmm0
   mulsd xmm0, xmm1
-  cvtsi2sd xmm1, rdx 
+  cvtsi2sd xmm1, edx 
   mulsd xmm0, xmm1
-  cvtsi2sd xmm1, rcx 
+  cvtsi2sd xmm1, ecx 
   mulsd xmm0, xmm1
-  cvtsi2sd xmm1, r8 
+  cvtsi2sd xmm1, r8d
   mulsd xmm0, xmm1
-  cvtsi2sd xmm1, r9 
+  cvtsi2sd xmm1, r9d
   mulsd xmm0, xmm1
   cvtsi2sd xmm1, [rbp + 0x10] 
   mulsd xmm0, xmm1
@@ -129,9 +116,9 @@ product_9_f:
   cvtsi2sd xmm1, [rbp + 0x28] 
   mulsd xmm0, xmm1
 
-  movq [rdi], xmm0 ; A: Lo guardo en el destino
+  movq [rdi], xmm0 ; A: Guardo el resultado en el destino
 
-  add rsp, 0x10
+  add rsp, 0x10 ; A: Libero el espacio en el stack
   pop rbp
 	ret
 
