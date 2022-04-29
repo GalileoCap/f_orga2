@@ -1,0 +1,3 @@
+[submodule "parciales"]
+	path = parciales
+	url = git@git.exactas.uba.ar:glewi/parciales.git
