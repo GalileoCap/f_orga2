@@ -16,7 +16,7 @@ extern kernel_exception
 
 extern process_scancode
 
-;; Definición de MACROS
+;; Definiciónal de MACROS
 ;; -------------------------------------------------------------------------- ;;
 
 %macro ISRc 1
@@ -122,14 +122,30 @@ ISRNE 20
 global _isr32
 ; COMPLETAR: Implementar la rutina
 _isr32:
-    iret
+  pushad ; A: Guardo los registros
+
+  call pic_finish1 ; A: Le aviso al PIC que puede seguir ; TODO: ¿Puede ir antes?
+  call next_clock ; A: Muevo al reloj ; TODO: Ajustar el tiempo para que se vea bien
+
+  popad ; A: Recupero los registros
+  iret
 
 ;; Rutina de atención del TECLADO
 ;; -------------------------------------------------------------------------- ;;
 global _isr33
 ; COMPLETAR: Implementar la rutina
 _isr33:
-    iret
+  pushad ; A: Guardo los registros
+
+  in al, 0x60 ; A: Me guardo el scancode del teclado
+  push ax ; A: Uso al como parametro ; NOTA: Pusheo al stack porque estoy en 32-bits ; NOTA2: Pusheo ax porque el stack esta alineado a 16-Bytes
+  call process_scancode
+  pop ax ; A: Libero del stack los parametros que use 
+
+  call pic_finish1 ; A: Le aviso al PIC que puede seguir
+
+  popad ; A: Recupero los registros
+  iret
 
 
 ;; Rutinas de atención de las SYSCALLS
@@ -138,12 +154,22 @@ _isr33:
 global _isr88
 ; COMPLETAR: Implementar la rutina
 _isr88:
-    iret
+  pushad ; A: Guardo los registros
+
+  add eax, 0x58 ; A: Lo pedido en la consigna
+
+  popad ; A: Recupero los registros
+  iret
 
 global _isr98
 ; COMPLETAR: Implementar la rutina
 _isr98:
-    iret
+  pushad ; A: [Guardo los registros
+
+  add eax, 0x62 ; A: Lo pedido en la consigna
+
+  popad ; A: Recupero los registros
+  iret
 
 ; PushAD Order
 %define offset_EAX 28
