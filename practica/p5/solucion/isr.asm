@@ -136,11 +136,11 @@ global _isr33
 ; COMPLETAR: Implementar la rutina
 _isr33:
   pushad ; A: Guardo los registros
-
+e
   in al, 0x60 ; A: Me guardo el scancode del teclado
-  push ax ; A: Uso al como parametro ; NOTA: Pusheo al stack porque estoy en 32-bits ; NOTA2: Pusheo ax porque el stack esta alineado a 16-Bytes
+  push eax ; A: Uso al como parametro ; NOTA: Pusheo al stack porque estoy en 32-bits ; NOTA2: Pusheo eax para mantenerlo alineado a 4-Bytes
   call process_scancode
-  pop ax ; A: Libero del stack los parametros que use 
+  pop eax ; A: Libero del stack los parametros que use 
 
   call pic_finish1 ; A: Le aviso al PIC que puede seguir
 
@@ -156,6 +156,7 @@ global _isr88
 _isr88:
   pushad ; A: Guardo los registros
 
+;xchg bx, bx
   add eax, 0x58 ; A: Lo pedido en la consigna
 
   popad ; A: Recupero los registros

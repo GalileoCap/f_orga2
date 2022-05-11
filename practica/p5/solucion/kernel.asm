@@ -106,10 +106,8 @@ modo_protegido:
     sti
 
     mov eax, 0x0
-    mov eax, 0x1
     int 88
-    ;int 98
-    ;print_text_pm start_pm_msg, start_pm_len, 0x0F, 2, 0
+    int 98
 
     ; Ciclar infinitamente 
     mov eax, 0xFFFF
