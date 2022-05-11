@@ -154,22 +154,15 @@ e
 global _isr88
 ; COMPLETAR: Implementar la rutina
 _isr88:
-  pushad ; A: Guardo los registros
-
-;xchg bx, bx
   add eax, 0x58 ; A: Lo pedido en la consigna
 
-  popad ; A: Recupero los registros
   iret
 
 global _isr98
 ; COMPLETAR: Implementar la rutina
 _isr98:
-  pushad ; A: [Guardo los registros
-
   add eax, 0x62 ; A: Lo pedido en la consigna
 
-  popad ; A: Recupero los registros
   iret
 
 ; PushAD Order

@@ -106,6 +106,7 @@ modo_protegido:
     sti
 
     mov eax, 0x0
+xchg bx, bx
     int 88
     int 98
 
