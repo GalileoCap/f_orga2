@@ -17,10 +17,11 @@ extern idt_init
 extern pic_reset
 extern pic_enable
 
+extern mmu_init_kernel_dir
+
 ; COMPLETAR - Definan correctamente estas constantes cuando las necesiten
 %define CS_RING_0_SEL 0x0008
 %define DS_RING_0_SEL 0x0018
-
 
 BITS 16
 ;; Saltear seccion de datos
@@ -103,12 +104,16 @@ modo_protegido:
     lidt [IDT_DESC]
     call pic_reset
     call pic_enable
-    sti
 
-    mov eax, 0x0
+    ; S: Activo la paginación
+    call mmu_init_kernel_dir ; A: Devuelve en eax la dirección a la kpd
+    mov cr3, eax ; A: Ignored := 0b000 0000, PCD := 0, PWT := 0, Ignored := 0b000
+    mov eax, cr0
+    or eax, 0x80000000
+    mov cr0, eax ; A: Paging := 1, el resto como estaba
 xchg bx, bx
-    int 88
-    int 98
+
+    sti
 
     ; Ciclar infinitamente 
     mov eax, 0xFFFF

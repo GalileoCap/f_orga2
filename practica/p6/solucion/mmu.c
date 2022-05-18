@@ -15,7 +15,7 @@ static pd_entry_t* kpd = (pd_entry_t*)KERNEL_PAGE_DIR;
 static pt_entry_t* kpt = (pt_entry_t*)KERNEL_PAGE_TABLE_0;
 
 static const uint32_t identity_mapping_end = 0x003FFFFF;
-static const uint32_t user_memory_pool_end = 0x02FFFFFF;
+/*static const uint32_t user_memory_pool_end = 0x02FFFFFF;*/
 
 static paddr_t next_free_kernel_page = 0x100000;
 static paddr_t next_free_user_page = 0x400000;
@@ -37,6 +37,7 @@ static inline void* kmemset(void* s, int c, size_t n) {
 }
 
 /**
+  return next_free_kernel_page + 4 * 1024; //A: Le agrego a la ultima página 1KB
  * zero_page limpia el contenido de una página que comienza en addr
  * @param addr es la dirección del comienzo de la página a limpiar
 */
@@ -45,7 +46,7 @@ static inline void zero_page(paddr_t addr) {
 }
 
 
-void mmu_init(void) {}
+/*void mmu_init(void) {}*/
 
 
 /**
@@ -53,6 +54,9 @@ void mmu_init(void) {}
  * @return devuelve la dirección de memoria de comienzo de la próxima página libre de kernel
  */
 paddr_t mmu_next_free_kernel_page(void) {
+  paddr_t res = next_free_kernel_page; //A: Le agrego a la ultima página 1KB
+  next_free_kernel_page += PAGE_SIZE;
+  return res;
 }
 
 /**
@@ -60,15 +64,35 @@ paddr_t mmu_next_free_kernel_page(void) {
  * @return devuelve la dirección de memoria de comienzo de la próxima página libre de usuarix
  */
 paddr_t mmu_next_free_user_page(void) {
+  paddr_t res = next_free_user_page; //A: Le agrego a la ultima página 1KB
+  next_free_user_page += PAGE_SIZE;
+  return res;
 }
 
-/**
+/**unsigned 
  * mmu_init_kernel_dir inicializa las estructuras de paginación vinculadas al kernel y
  * realiza el identity mapping
  * @return devuelve la dirección de memoria de la página donde se encuentra el directorio 
  * de páginas usado por el kernel
  */
 paddr_t mmu_init_kernel_dir(void) {
+  zero_page((paddr_t)kpd); //A: Limpio kpd
+
+  pd_entry_t kpt_entry = { //A: Armo la primera entrada
+    .attrs = 0x003, //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 0, R/W := 1, 1
+    .pt = (KERNEL_PAGE_TABLE_0 >> 12),
+  };
+  kpd[0] = kpt_entry;
+
+  for (unsigned int i = 0; i < (identity_mapping_end / PAGE_SIZE) + 1; i++) { //A: Mappeo todas páginas del kernel //NOTA: La division da -1
+    pt_entry_t kpt_pentry = {
+      .attrs = 0x003, //A: Ignored := 0b000, G := 0, PAT := 0, D := 0, A := 0, PCD := 0, PWT := 0, U/S := 0, R/W := 1, 1
+      .page = i,
+    };
+    kpt[i] = kpt_pentry;
+  }
+
+  return KERNEL_PAGE_DIR;
 }
 
 /**
@@ -79,17 +103,16 @@ paddr_t mmu_init_kernel_dir(void) {
  * @param phy la dirección física que debe ser accedida (dirección de destino)
  * @param attrs los atributos a asignar en la entrada de la tabla de páginas
  */
-void mmu_map_page(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) {
-}
+/*void mmu_map_page(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) {*/
+/*}*/
 
 /**
  * mmu_unmap_page elimina la entrada vinculada a la dirección virt en la tabla de páginas correspondiente
  * @param virt la dirección virtual que se ha de desvincular
  * @return la dirección física de la página desvinculada
  */
-paddr_t mmu_unmap_page(uint32_t cr3, vaddr_t virt) {
-
-}
+/*paddr_t mmu_unmap_page(uint32_t cr3, vaddr_t virt) {*/
+/*}*/
 
 #define DST_VIRT_PAGE 0xA00000
 #define SRC_VIRT_PAGE 0xB00000
@@ -102,16 +125,15 @@ paddr_t mmu_unmap_page(uint32_t cr3, vaddr_t virt) {
  * Esta función mapea ambas páginas a las direcciones SRC_VIRT_PAGE y DST_VIRT_PAGE, respectivamente, realiza
  * la copia y luego desmapea las páginas. Usar la función rcr3 definida en i386.h para obtener el cr3 actual
  */
-static inline void copy_page(paddr_t dst_addr, paddr_t src_addr) {
-}
+/*static inline void copy_page(paddr_t dst_addr, paddr_t src_addr) {*/
+/*}*/
 
  /**
  * mmu_init_task_dir inicializa las estructuras de paginación vinculadas a una tarea cuyo código se encuentra en la dirección phy_start
  * @pararm phy_start es la dirección donde comienzan las dos páginas de código de la tarea asociada a esta llamada
  * @return el contenido que se ha de cargar en un registro CR3 para la tarea asociada a esta llamada
  */
-paddr_t mmu_init_task_dir(paddr_t phy_start) {
-
-}
+/*paddr_t mmu_init_task_dir(paddr_t phy_start) {*/
+/*}*/
 
 
