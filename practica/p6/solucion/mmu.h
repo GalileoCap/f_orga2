@@ -35,4 +35,6 @@ paddr_t mmu_init_kernel_dir(void);
 
 paddr_t mmu_init_task_dir(paddr_t phy_start);
 
+void test_copy_page(void);
+
 #endif //  __MMU_H__

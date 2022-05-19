@@ -18,6 +18,7 @@ extern pic_reset
 extern pic_enable
 
 extern mmu_init_kernel_dir
+extern test_copy_page
 
 ; COMPLETAR - Definan correctamente estas constantes cuando las necesiten
 %define CS_RING_0_SEL 0x0008
@@ -111,7 +112,8 @@ modo_protegido:
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax ; A: Paging := 1, el resto como estaba
-xchg bx, bx
+    
+    call test_copy_page
 
     sti
 

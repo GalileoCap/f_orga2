@@ -37,7 +37,6 @@ static inline void* kmemset(void* s, int c, size_t n) {
 }
 
 /**
-  return next_free_kernel_page + 4 * 1024; //A: Le agrego a la ultima página 1KB
  * zero_page limpia el contenido de una página que comienza en addr
  * @param addr es la dirección del comienzo de la página a limpiar
 */
@@ -78,15 +77,17 @@ paddr_t mmu_next_free_user_page(void) {
 paddr_t mmu_init_kernel_dir(void) {
   zero_page((paddr_t)kpd); //A: Limpio kpd
 
+  uint32_t attrs = 0x003; //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 0, R/W := 1, 1
+
   pd_entry_t kpt_entry = { //A: Armo la primera entrada
-    .attrs = 0x003, //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 0, R/W := 1, 1
+    .attrs = attrs,
     .pt = (KERNEL_PAGE_TABLE_0 >> 12),
   };
   kpd[0] = kpt_entry;
 
   for (unsigned int i = 0; i < (identity_mapping_end / PAGE_SIZE) + 1; i++) { //A: Mappeo todas páginas del kernel //NOTA: La division da -1
     pt_entry_t kpt_pentry = {
-      .attrs = 0x003, //A: Ignored := 0b000, G := 0, PAT := 0, D := 0, A := 0, PCD := 0, PWT := 0, U/S := 0, R/W := 1, 1
+      .attrs = attrs,
       .page = i,
     };
     kpt[i] = kpt_pentry;
@@ -103,16 +104,37 @@ paddr_t mmu_init_kernel_dir(void) {
  * @param phy la dirección física que debe ser accedida (dirección de destino)
  * @param attrs los atributos a asignar en la entrada de la tabla de páginas
  */
-/*void mmu_map_page(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) {*/
-/*}*/
+void mmu_map_page(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) {
+  pd_entry_t *pd = (pd_entry_t*) CR3_TO_PAGE_DIR(cr3),
+             *pde = &pd[VIRT_PAGE_DIR(virt)];
+  if ((pde->attrs & 1) == 0) //A: Not present
+    pde->pt = mmu_next_free_user_page(); //A: Le apunto a una página nueva en memoria
+  pde->attrs = attrs; //A: Le asigno los atributos //NOTA: Hay atributos "extra" para la página en sí que la pd ignora
+
+  pt_entry_t *pt = (pt_entry_t*)(pde->pt << 12),
+             *pte = &pt[VIRT_PAGE_TABLE(virt)];
+  pte->attrs = attrs; //A: Le asigno los atributos
+  pte->page = phy >> 12; //A: Le saco el offset a la física
+}
 
 /**
  * mmu_unmap_page elimina la entrada vinculada a la dirección virt en la tabla de páginas correspondiente
  * @param virt la dirección virtual que se ha de desvincular
  * @return la dirección física de la página desvinculada
  */
-/*paddr_t mmu_unmap_page(uint32_t cr3, vaddr_t virt) {*/
-/*}*/
+paddr_t mmu_unmap_page(uint32_t cr3, vaddr_t virt) {
+  pd_entry_t *pd = (pd_entry_t*) CR3_TO_PAGE_DIR(cr3), //A: Recupero la pde
+             *pde = &pd[VIRT_PAGE_DIR(virt)];
+  pt_entry_t *pt = (pt_entry_t*)(pde->pt << 12), //A: Recupero la pte a borrar
+             *pte = &pt[VIRT_PAGE_TABLE(virt)];
+
+  paddr_t phy = pte->page | (virt & 0xFFF); //A: Recupero la physical
+  pte->attrs = 0x000; pte->page = 0x00000; //A: La borro
+
+  //TODO: ¿Querría eliminar la tabla también si está vacía?
+
+  return phy;
+}
 
 #define DST_VIRT_PAGE 0xA00000
 #define SRC_VIRT_PAGE 0xB00000
@@ -125,8 +147,28 @@ paddr_t mmu_init_kernel_dir(void) {
  * Esta función mapea ambas páginas a las direcciones SRC_VIRT_PAGE y DST_VIRT_PAGE, respectivamente, realiza
  * la copia y luego desmapea las páginas. Usar la función rcr3 definida en i386.h para obtener el cr3 actual
  */
-/*static inline void copy_page(paddr_t dst_addr, paddr_t src_addr) {*/
-/*}*/
+static inline void copy_page(paddr_t dst_addr, paddr_t src_addr) {
+  uint32_t attrs = 0x003;
+  mmu_map_page(rcr3(), DST_VIRT_PAGE, dst_addr, attrs); 
+  mmu_map_page(rcr3(), SRC_VIRT_PAGE, src_addr, attrs);
+
+  uint8_t *dst = (uint8_t*) DST_VIRT_PAGE,
+           *src = (uint8_t*) SRC_VIRT_PAGE;
+  for (size_t i = 0; i < PAGE_SIZE; i++)
+    dst[i] = src[i];
+
+  mmu_unmap_page(rcr3(), DST_VIRT_PAGE); 
+  mmu_unmap_page(rcr3(), SRC_VIRT_PAGE);
+}
+
+void test_copy_page(void) {
+  uint32_t src = 0x000000,
+           dst = 0x400000;
+
+  /*__asm__("xchg %bx, %bx\n\t");*/
+  copy_page(dst, src);
+  /*__asm__("xchg %bx, %bx\n\t");*/
+}
 
  /**
  * mmu_init_task_dir inicializa las estructuras de paginación vinculadas a una tarea cuyo código se encuentra en la dirección phy_start
