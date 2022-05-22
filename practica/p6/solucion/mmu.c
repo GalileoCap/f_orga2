@@ -93,7 +93,8 @@ paddr_t mmu_init_kernel_dir(void) {
     kpt[i] = kpt_pentry;
   }
 
-  return KERNEL_PAGE_DIR;
+  tlbflush();
+  return (KERNEL_PAGE_DIR | attrs);
 }
 
 /**
@@ -107,14 +108,19 @@ paddr_t mmu_init_kernel_dir(void) {
 void mmu_map_page(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) {
   pd_entry_t *pd = (pd_entry_t*) CR3_TO_PAGE_DIR(cr3),
              *pde = &pd[VIRT_PAGE_DIR(virt)];
-  if ((pde->attrs & 1) == 0) //A: Not present
-    pde->pt = mmu_next_free_user_page(); //A: Le apunto a una página nueva en memoria
+  bool was_missing = (pde->attrs & 1) == 0;
   pde->attrs = attrs; //A: Le asigno los atributos //NOTA: Hay atributos "extra" para la página en sí que la pd ignora
+  if (was_missing) { //A: Not present
+    pde->pt = mmu_next_free_kernel_page(); //A: Le apunto a una página nueva en memoria
+    zero_page(pde->pt); //A: La limpio
+  }
 
   pt_entry_t *pt = (pt_entry_t*)(pde->pt << 12),
              *pte = &pt[VIRT_PAGE_TABLE(virt)];
   pte->attrs = attrs; //A: Le asigno los atributos
   pte->page = phy >> 12; //A: Le saco el offset a la física
+
+  tlbflush();
 }
 
 /**
@@ -133,6 +139,7 @@ paddr_t mmu_unmap_page(uint32_t cr3, vaddr_t virt) {
 
   //TODO: ¿Querría eliminar la tabla también si está vacía?
 
+  tlbflush();
   return phy;
 }
 
@@ -165,9 +172,7 @@ void test_copy_page(void) {
   uint32_t src = 0x000000,
            dst = 0x400000;
 
-  /*__asm__("xchg %bx, %bx\n\t");*/
   copy_page(dst, src);
-  /*__asm__("xchg %bx, %bx\n\t");*/
 }
 
  /**
@@ -175,7 +180,25 @@ void test_copy_page(void) {
  * @pararm phy_start es la dirección donde comienzan las dos páginas de código de la tarea asociada a esta llamada
  * @return el contenido que se ha de cargar en un registro CR3 para la tarea asociada a esta llamada
  */
-/*paddr_t mmu_init_task_dir(paddr_t phy_start) {*/
-/*}*/
+paddr_t mmu_init_task_dir(paddr_t phy_start) {
+  vaddr_t v_start = 0x8000000;
+  uint32_t attrs = 0x005; //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 1, R/W := 0, 1
+  
+  //S: Le creo su propio cr3 con los atributos correctos
+  paddr_t cr3 = (mmu_next_free_kernel_page() | attrs); 
+  zero_page(CR3_TO_PAGE_DIR(cr3)); //A: La limpio
 
+  //S: Le mapeo al kernel
+  copy_page(cr3, rcr3());
+
+  //S: Para el código
+  mmu_map_page(cr3, v_start, phy_start, attrs);
+  mmu_map_page(cr3, v_start + PAGE_SIZE, phy_start + PAGE_SIZE, attrs);
+
+  //S: Para el stack
+  uint32_t stack_attrs = 0x007; //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 1, R/W := 1, 1
+  mmu_map_page(cr3, v_start + 2 * PAGE_SIZE, mmu_next_free_user_page(), stack_attrs);
+
+  return cr3;
+}
 
