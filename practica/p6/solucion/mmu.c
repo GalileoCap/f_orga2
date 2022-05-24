@@ -44,7 +44,6 @@ static inline void zero_page(paddr_t addr) {
   kmemset((void*)addr, 0x00, PAGE_SIZE);
 }
 
-
 /*void mmu_init(void) {}*/
 
 
@@ -75,10 +74,9 @@ paddr_t mmu_next_free_user_page(void) {
  * de páginas usado por el kernel
  */
 paddr_t mmu_init_kernel_dir(void) {
-  zero_page((paddr_t)kpd); //A: Limpio kpd
+  zero_page((paddr_t) kpd); //A: Limpio kpd
 
   uint32_t attrs = 0x003; //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 0, R/W := 1, 1
-
   pd_entry_t kpt_entry = { //A: Armo la primera entrada
     .attrs = attrs,
     .pt = (KERNEL_PAGE_TABLE_0 >> 12),
@@ -90,7 +88,7 @@ paddr_t mmu_init_kernel_dir(void) {
       .attrs = attrs,
       .page = i,
     };
-    kpt[i] = kpt_pentry;
+    kpt[i] = kpt_pentry; 
   }
 
   tlbflush();
@@ -111,10 +109,10 @@ void mmu_map_page(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) {
   bool was_missing = (pde->attrs & 1) == 0;
   pde->attrs = attrs; //A: Le asigno los atributos //NOTA: Hay atributos "extra" para la página en sí que la pd ignora
   if (was_missing) { //A: Not present
-    pde->pt = mmu_next_free_kernel_page(); //A: Le apunto a una página nueva en memoria
-    zero_page(pde->pt); //A: La limpio
+    pde->pt = mmu_next_free_kernel_page() >> 12; //A: Le apunto a una página nueva en memoria
+    zero_page(pde->pt << 12); //A: La limpio
   }
-
+  
   pt_entry_t *pt = (pt_entry_t*)(pde->pt << 12),
              *pte = &pt[VIRT_PAGE_TABLE(virt)];
   pte->attrs = attrs; //A: Le asigno los atributos
@@ -189,7 +187,7 @@ paddr_t mmu_init_task_dir(paddr_t phy_start) {
   zero_page(CR3_TO_PAGE_DIR(cr3)); //A: La limpio
 
   //S: Le mapeo al kernel
-  copy_page(cr3, rcr3());
+  copy_page(cr3, rcr3()); 
 
   //S: Para el código
   mmu_map_page(cr3, v_start, phy_start, attrs);
