@@ -179,7 +179,7 @@ void test_copy_page(void) {
  * @return el contenido que se ha de cargar en un registro CR3 para la tarea asociada a esta llamada
  */
 paddr_t mmu_init_task_dir(paddr_t phy_start) {
-  vaddr_t v_start = 0x8000000;
+  vaddr_t v_start = TASK_CODE_VIRTUAL;
   uint32_t attrs = 0x005; //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 1, R/W := 0, 1
   
   //S: Le creo su propio cr3 con los atributos correctos
@@ -195,7 +195,7 @@ paddr_t mmu_init_task_dir(paddr_t phy_start) {
 
   //S: Para el stack
   uint32_t stack_attrs = 0x007; //A: Ignored := 0b0000, 0, Ign := 0, A := 0, PCD := 0, PWT := 0, U/S := 1, R/W := 1, 1
-  mmu_map_page(cr3, v_start + 2 * PAGE_SIZE, mmu_next_free_user_page(), stack_attrs);
+  mmu_map_page(cr3, TASK_STACK_BASE, mmu_next_free_user_page(), stack_attrs);
 
   return cr3;
 }

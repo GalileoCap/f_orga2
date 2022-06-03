@@ -21,9 +21,15 @@ extern mmu_init_kernel_dir
 extern test_copy_page
 extern mmu_init_task_dir
 
+extern tss_init
+extern sched_init
+extern task_init
+
 ; COMPLETAR - Definan correctamente estas constantes cuando las necesiten
 %define CS_RING_0_SEL 0x0008
 %define DS_RING_0_SEL 0x0018
+%define TASK_INITIAL_SEL 0x0058
+%define TASK_IDLE_SEL 0x0060
 
 BITS 16
 ;; Saltear seccion de datos
@@ -113,21 +119,22 @@ modo_protegido:
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax ; A: Paging := 1, el resto como estaba
-    
-xchg bx, bx
-    sti ;TODO: Cambia los attrs en la tabla
-xchg bx, bx
+
+;xchg bx, bx
+    call tss_init
+;xchg bx, bx
+
+    call sched_init
+
+    mov ax, TASK_INITIAL_SEL
+    ltr ax
+
+    sti ;TODO: Cambia los attrs en la taba ;TODO: Donde iria?
+
+    call task_init
 
 xchg bx, bx
-    call test_copy_page
-xchg bx, bx
-
-    mov eax, 0x18000
-    push eax
-    call mmu_init_task_dir 
-    add esp, 0x04
-xchg bx, bx
-    mov cr3, eax
+    jmp TASK_IDLE_SEL:0
 xchg bx, bx
 
     ; Ciclar infinitamente 

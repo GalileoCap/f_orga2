@@ -88,7 +88,7 @@ uint32_t strlen(char *s) {
   return res;
 }
 
-void print_title() { //U: Imprime en grande "GRUPO #1" y titilante
+void print_titulo() { //U: Imprime en grande "GRUPO #1" y titilante
   char* title[t_len][t_lHeight] = {
     {
       " ### ",
@@ -186,6 +186,6 @@ void print_names() {
 void screen_draw_layout(void) {
   screen_draw_box(0, 0, 50, 80, '\0', 0x0); //A: Limpio el fondo
 
-  print_title();
+  print_titulo();
   print_names();
 }

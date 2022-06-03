@@ -6,13 +6,27 @@
 ; Definicion de rutinas de atencion de interrupciones
 
 %include "print.mac"
-%define CS_RING_0_SEL    (1 << 3)
-
+%define DS_RING_0_SEL     (3 << 3)
+%define CS_RING_0_SEL     (1 << 3)
+%define GDT_TASK_IDLE_SEL (12 << 3)
+%define TICKS_TASK_SWITCH 200
 BITS 32
+
+sched_task_offset:     dd 0xFFFFFFFF
+sched_task_selector:   dw 0xFFFF
 
 ;; PIC
 extern pic_finish1
+
+;; Sched
+extern sched_next_task
+extern sched_current_task
+extern tick_count
+extern task_tick
 extern kernel_exception
+extern user_exception
+extern disable_task
+extern page_fault_handler
 
 extern process_scancode
 
@@ -117,17 +131,36 @@ ISRNE 18
 ISRNE 19
 ISRNE 20
 
-;; Rutina de atención del RELOJ
-;; -------------------------------------------------------------------------- ;;
 global _isr32
 ; COMPLETAR: Implementar la rutina
+
 _isr32:
-  pushad ; A: Guardo los registros
+  pushad
+  call pic_finish1
+  call next_clock
+  jmp .run_sched
 
-  call pic_finish1 ; A: Le aviso al PIC que puede seguir ; TODO: ¿Puede ir antes?
-  call next_clock ; A: Muevo al reloj ; TODO: Ajustar el tiempo para que se vea bien
+.run_sched:
+  call task_tick
 
-  popad ; A: Recupero los registros
+  mov ecx, [tick_count]
+  cmp ecx, TICKS_TASK_SWITCH
+  jne .fin
+
+  mov dword [tick_count], 0
+  call sched_next_task
+  cmp ax, 0
+  je .fin
+
+  str bx
+  cmp ax, bx
+  je .fin
+
+  mov word [sched_task_selector], ax
+  jmp far [sched_task_offset] ; A: Tiene 16+32 bits de largo, porque es un SELECTOR:DIRECCIÓN
+
+.fin:
+  popad
   iret
 
 ;; Rutina de atención del TECLADO

@@ -62,43 +62,33 @@ void tss_set(tss_t tss, int8_t task_id) {
  * Crea una tss con los valores por defecto y el eip code_start
  */
 tss_t tss_create_user_task(paddr_t code_start) {
-/*ENUNCIADO
-      //COMPLETAR: es correcta esta llamada a mmu_init_task_dir?
-	  uint32_t cr3 = mmu_init_task_dir(code_start);
-      //COMPLETAR: asignar valor inicial de la pila de la tarea
-	  vaddr_t stack = 0;
-      //COMPLETAR: dir. virtual de comienzo del codigo
-	  vaddr_t code_virt = 0;
-	  //COMPLETAR: pedir pagina de kernel para la pila de nivel cero
-	  vaddr_t stack0 = 0;
-	  //COMPLETAR: a donde deberia apuntar la pila de nivel cero?
-      vaddr_t esp0 = stack0 + 0;
-	  return (tss_t){
-	      .cr3 = cr3,
-	      .esp = stack,
-	      .ebp = stack,
-	      .eip = code_virt,
-	      .cs = GDT_CODE_3_SEL,
-	      .ds = GDT_DATA_3_SEL,
-	      .es = GDT_DATA_3_SEL,
-	      .fs = GDT_DATA_3_SEL,
-	      .gs = GDT_DATA_3_SEL,
-	      .ss = GDT_DATA_3_SEL,
-	      .ss0 = GDT_DATA_0_SEL,
-	      .esp0 = esp0,
-	      .eflags = EFLAGS_IF,
-	  };
-
-END*/
+  //COMPLETAR: es correcta esta llamada a mmu_init_task_dir?
+  paddr_t cr3 = mmu_init_task_dir(code_start);
+  vaddr_t stack = TASK_STACK_BASE + PAGE_SIZE - 1;
+  vaddr_t code_virt = TASK_CODE_VIRTUAL;
+  vaddr_t stack0 = mmu_next_free_kernel_page();
+  vaddr_t esp0 = stack0 + PAGE_SIZE - 1;
+  return (tss_t){
+      .cr3 = cr3,
+      .esp = stack,
+      .ebp = stack,
+      .eip = code_virt,
+      .cs = GDT_CODE_3_SEL,
+      .ds = GDT_DATA_3_SEL,
+      .es = GDT_DATA_3_SEL,
+      .fs = GDT_DATA_3_SEL,
+      .gs = GDT_DATA_3_SEL,
+      .ss = GDT_DATA_3_SEL,
+      .ss0 = GDT_DATA_0_SEL,
+      .esp0 = esp0,
+      .eflags = EFLAGS_IF,
+  };
 }
 
 /**
  * Inicializa las primeras entradas de tss (inicial y idle)
  */
 void tss_init(void) {
-	/*ENUNCIADO
-	  //COMPLETAR
-	  //gdt[GDT_IDX_TASK_IDLE] = tss_gdt_entry_for_task(??);
-	  //gdt[GDT_IDX_TASK_INITIAL] = ??;
-	END*/
+  gdt[GDT_IDX_TASK_IDLE] = tss_gdt_entry_for_task(&tss_idle);
+  gdt[GDT_IDX_TASK_INITIAL] = tss_gdt_entry_for_task(&tss_initial);
 }
