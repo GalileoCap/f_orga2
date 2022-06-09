@@ -29,6 +29,10 @@ extern disable_task
 extern page_fault_handler
 
 extern process_scancode
+extern changeEDX
+
+_isr78_active: db 0x00 ; U: 1 si fue llamada, 0 si no
+_isr78_val: dd 0x00000000 ; U: Valor para tapar edx
 
 ;; Definiciónal de MACROS
 ;; -------------------------------------------------------------------------- ;;
@@ -157,6 +161,19 @@ _isr32:
   je .fin
 
   mov word [sched_task_selector], ax
+  
+  mov al, [_isr78_active]
+  cmp al, 0x01
+  jne .toTask
+  xchg bx, bx
+  mov eax, [_isr78_val]
+  push eax
+  mov eax, [sched_task_selector]
+  push eax
+  call changeEdx
+  mov byte [_isr78_active], 0x0
+
+.toTask:
   jmp far [sched_task_offset] ; A: Tiene 16+32 bits de largo, porque es un SELECTOR:DIRECCIÓN
 
 .fin:
@@ -169,7 +186,7 @@ global _isr33
 ; COMPLETAR: Implementar la rutina
 _isr33:
   pushad ; A: Guardo los registros
-e
+
   in al, 0x60 ; A: Me guardo el scancode del teclado
   push eax ; A: Uso al como parametro ; NOTA: Pusheo al stack porque estoy en 32-bits ; NOTA2: Pusheo eax para mantenerlo alineado a 4-Bytes
   call process_scancode
@@ -183,6 +200,18 @@ e
 
 ;; Rutinas de atención de las SYSCALLS
 ;; -------------------------------------------------------------------------- ;;
+
+global _isr78
+_isr78:
+  pushad ; A: Guardo los registros
+
+  mov eax, [esp + 0x4 * 9] ; A: Recupero el parametro pasado en el stack
+  xchg bx, bx
+  mov [_isr78_val], eax ; A: Guardo el valor
+  mov word [_isr78_active], 0x01 ; A: Lo marco como activo
+
+  popad
+  iret
 
 global _isr88
 ; COMPLETAR: Implementar la rutina

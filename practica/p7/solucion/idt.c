@@ -97,6 +97,7 @@ void idt_init() {
   IDT_ENTRY0(33); //A: Para el teclado
 
   // COMPLETAR: Syscalls
+  IDT_ENTRY3(78); //A: Para modificar el edx
   IDT_ENTRY3(88);
   IDT_ENTRY3(98);
 }

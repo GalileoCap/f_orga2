@@ -34,6 +34,7 @@ void _isr20();
 void _isr32(); // clock
 void _isr33(); // teclado
 
+void _isr78(); // parcial
 void _isr88();
 void _isr98();
 

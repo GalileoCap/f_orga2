@@ -118,3 +118,13 @@ gdt_entry_t gdt[GDT_COUNT] = {
 // Aca hay una inicializacion estatica de una structura que tiene su primer componente el tamano 
 // y en la segunda, la direccion de memoria de la GDT. Observen la notacion que usa. 
 gdt_descriptor_t GDT_DESC = {sizeof(gdt) - 1, (uint32_t)&gdt};
+
+void changeEDX(uint16_t idx, uint32_t val) {
+  gdt_entry_t foo = gdt[idx >> 3];
+  paddr_t bar = 0;
+  bar |= foo.base_15_0;
+  bar |= foo.base_23_16 << 15;
+  bar |= foo.base_31_24 << 23;
+  uint32_t *reg = (uint32_t*)bar;
+  reg[12] = val;
+}

@@ -43,4 +43,6 @@ typedef struct str_gdt_entry {
 extern gdt_entry_t gdt[]; //U: Un puntero a la GDT
 extern gdt_descriptor_t GDT_DESC; //U: Describe la GDT, su tamaño y posición en la memoria TODO
 
+void changeEDX(uint16_t idx, uint32_t val);
+
 #endif // __GDT_H__

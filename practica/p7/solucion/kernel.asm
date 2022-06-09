@@ -25,6 +25,8 @@ extern tss_init
 extern sched_init
 extern task_init
 
+extern galiTest
+
 ; COMPLETAR - Definan correctamente estas constantes cuando las necesiten
 %define CS_RING_0_SEL 0x0008
 %define DS_RING_0_SEL 0x0018
@@ -133,9 +135,7 @@ modo_protegido:
 
     call task_init
 
-xchg bx, bx
     jmp TASK_IDLE_SEL:0
-xchg bx, bx
 
     ; Ciclar infinitamente 
     mov eax, 0xFFFF
@@ -147,3 +147,5 @@ xchg bx, bx
 ;; -------------------------------------------------------------------------- ;;
 
 %include "a20.asm"
+
+;void changeEDX(uint32_t val);
