@@ -165,12 +165,12 @@ _isr32:
   mov al, [_isr78_active]
   cmp al, 0x01
   jne .toTask
-  xchg bx, bx
+  ;xchg bx, bx
   mov eax, [_isr78_val]
   push eax
   mov eax, [sched_task_selector]
   push eax
-  call changeEdx
+  call changeEDX
   mov byte [_isr78_active], 0x0
 
 .toTask:
@@ -205,10 +205,10 @@ global _isr78
 _isr78:
   pushad ; A: Guardo los registros
 
-  mov eax, [esp + 0x4 * 9] ; A: Recupero el parametro pasado en el stack
-  xchg bx, bx
+  mov eax, [esp + 0x4 * 7] ; A: Recupero el parametro pasado en el stack
+  ;xchg bx, bx
   mov [_isr78_val], eax ; A: Guardo el valor
-  mov word [_isr78_active], 0x01 ; A: Lo marco como activo
+  mov byte [_isr78_active], 0x01 ; A: Lo marco como activo
 
   popad
   iret
